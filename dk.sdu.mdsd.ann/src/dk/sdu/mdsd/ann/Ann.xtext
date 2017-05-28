@@ -1,0 +1,121 @@
+grammar dk.sdu.mdsd.ann.Ann with org.eclipse.xtext.common.Terminals
+
+generate ann "http://www.sdu.dk/mdsd/ann/Ann"
+
+
+ANNModel:
+		name=ID '{' 
+			'alpha' alpha=DECIMAL 
+			'epochs' epochs=INT 
+			Activation+=Activation*
+			Layer+=Layer* '}'
+;    
+
+DECIMAL:
+ INT '.' INT
+;
+
+Layer:
+	Hidden | Input | Output
+;
+	
+Hidden:
+	'hidden' '{' 
+		'size' size=INT
+		'activation' l_rule= LearningRule '}' 
+;
+
+Input:
+	'in' '{' 
+		'size' size=INT '}' 
+;
+
+Output:
+	'out' '{' 
+		'size' size=INT
+		'activation' l_rule= LearningRule'}' 
+;
+
+LearningRule:
+	Sigmoid?='sigmoid' | Tansig?='tansig' | namedFunction=[Activation]
+;
+
+Activation:
+	External | Custom
+;
+
+External:
+	name=ID 'external'
+;
+
+Custom:
+	name=ID '(' input=Letter ')' '{'
+	'function' '=' exp=Expression
+	'derivative' '=' der=Expression '}'
+;
+
+Expression:
+	Factor ({Part.left = current} operator = PartOperator right = Factor)*
+;
+
+Factor returns Expression:
+	Primary ({Fac.left = current} operator = FactorOperator right = Primary)*
+;
+
+Primary returns Expression:
+	Operand | '(' Expression ')' | Math
+;
+
+Math:
+	Euler | NLog | Sin | Cos | Sqrt | Power
+;
+
+Euler:
+	'e' '(' value = Expression ')'
+;
+
+NLog:
+	'nlog' '(' value = Expression ')'
+;
+
+Sin:
+	'sin' '(' value = Expression ')'
+;
+
+Cos:
+	'cos' '(' value = Expression ')'
+;
+
+Sqrt:
+	'sqrt' '(' value = Expression ')'
+;
+
+Power:
+	'pow' '('base = Expression ',' exponent = Expression ')'
+;
+
+PartOperator:
+	'+' | '-'
+;
+
+FactorOperator:
+	'*' | '/'
+;
+
+NumberLiteral:
+	operator = PartOperator?
+	value = NumberTypes
+;
+
+Operand:
+	Letter | NumberLiteral
+;
+
+NumberTypes:
+	DECIMAL | INT
+;
+
+Letter:
+	operator = PartOperator?
+	value = ID
+;
